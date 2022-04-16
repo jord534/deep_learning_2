@@ -23,7 +23,11 @@ def entree_sortie_reseau(dnn, input_data):
 
 def binary_cross_entropy(y_hat, y):
     n = y.shape[-1]
-    return -1/n * np.sum(y*np.log(y_hat), axis = -1)
+    return -np.sum(y*np.log(y_hat), axis = -1)
+
+def grad_sigmoid(x):
+    y = bm.sigmoid(x)
+    return y*(1-y)
 
 def retropropagation(dnn, n_iterations, learning_rate, batch_size, data_size, data_labels):
     

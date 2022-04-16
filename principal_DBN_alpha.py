@@ -27,13 +27,16 @@ def init_DNN(network_size):
     return dnn
 
 def pretrain_DNN(dnn, n_iterations, learning_rate, batch_size, data_size):
-    # data_size is a tuple with rule : 
-    # data_size[O] is input_size
-    # data_size[1] is output_size (classificatio)
-    input_size = data_size[0]
-    output_size = data_size[0]
-    dnn.input = bm.train_RBM(dnn.input, n_iterations, learning_rate, batch_size, input_size)
+
+    dnn.input = bm.train_RBM(dnn.input, n_iterations, learning_rate, batch_size, data_size)
     for layer in range(len(dnn.hidden_layers)):
+        # !!!! need to fix the problem : train_RBM doesn't know which data to train on
+        # !!!! when this is fixed, give each layer the previous layer's output to start training on
+        # !!!! this needs to be fixed in principal_RBM_alpha
         dnn.hidden_layers[layer] = bm.train_RBM(dnn.hidden_layers[layer], n_iterations, learning_rate, batch_size, dnn.layer_size)
-    dnn.classification_layer = bm.train_RBM(dnn.classification_layer, n_iterations, learning_rate, batch_size, dnn.layer_size)
+    # we don't train the classification layer just yet
+    return dnn
+
+def generer_image_DBM(dnn, n_iterations, n_images):
+    # !!!! need to learn how to do that. (cf principal_RBM_alpha)
     return 0

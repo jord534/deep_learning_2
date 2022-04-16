@@ -52,6 +52,8 @@ def train_RBM(rbm, epochs, learning_rate, batch_size, data_size):
             batch_prime = sortie_entree_RBM(rbm, h)
             h_prime = entree_sortie_RBM(rbm, batch_prime)
             
+
+            # !!! : need to implement an avaergaing procedure before updating W, b and a
             neg_grad = batch_prime.dot(h_prime)
             rbm.W -= learning_rate*(pos_grad-neg_grad)
             rbm.a -= learning_rate*(batch - batch_prime)

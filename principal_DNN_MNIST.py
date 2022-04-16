@@ -23,13 +23,16 @@ def entree_sortie_reseau(dnn, input_data):
 
 def binary_cross_entropy(y_hat, y):
     n = y.shape[-1]
-    return 1/n * np.sum(y*np.log(y_hat), axis = -1)
+    return -1/n * np.sum(y*np.log(y_hat), axis = -1)
 
 def retropropagation(dnn, n_iterations, learning_rate, batch_size, data_size, data_labels):
     
-    # let's code the algoirthm for one layer to the next
     network_output = entree_sortie_reseau(dnn, input_data) # !!! same problem : which data to train on? retropropagation needs to know
     classes_hat = network_output[-1]
-    cost = binary_cross_entropy(classes_hat, data_labels) # !!! : need to one hot encode labels
-
+    cost = binary_cross_entropy(classes_hat, data_labels)
+    # let's code the algoirthm for one layer to the next
+    # needed : dC/dw, dC/db, 
+    # dC/dw = 
+    
+    
     return 0

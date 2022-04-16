@@ -15,6 +15,10 @@ for char in range(datasize[0]) :
     for samp in range(datasize[1]):
         dataset[char,samp] = mat[char,samp].flatten()
 
+# 1-hot-enode of labels
+datalabels = np.zeros((datasize[0],datasize[1], datasize[0]))
+for i in range(datasize[0]):
+    datalabels[i,:,i] = 1
 
 def lire_alpha_digits(character_index_to_learn):
     return dataset[character_index_to_learn]

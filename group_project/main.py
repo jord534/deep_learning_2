@@ -57,3 +57,15 @@ Y = OneHotEncoder().fit_transform(Y)
 
 image_size = 28
 num_images = 5
+
+#DNN is a DBN with a classification layer
+DNN = DBN
+# n_classes needs to be Y.shape[-1]
+n_classes = Y.shape[-1]
+DNN.add_classification_layer(n_classes)
+
+import principal_DNN_MNIST as dnn
+learning_rate = 3e-4
+DNN = dnn.retropropagation(DNN, X, nb_iter, learning_rate, batch_size, X.shape[0], Y )
+
+dnn.test_DNN(DNN, X, Y)

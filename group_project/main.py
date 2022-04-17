@@ -46,7 +46,7 @@ dbn.generer_image_DBN(DBN, nb_iter_gibbs, 1)
 ############ MNIST ###########
 ##############################
 
-"""
+
 file = 'train-images.idx3-ubyte'
 X = (idx2numpy.convert_from_file(file).reshape((60000,-1,1))[:,:,0]>127)*1.
 X = X[:1000, :]
@@ -57,4 +57,3 @@ Y = OneHotEncoder().fit_transform(Y)
 
 image_size = 28
 num_images = 5
-"""

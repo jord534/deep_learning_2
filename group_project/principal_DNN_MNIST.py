@@ -37,7 +37,7 @@ def entree_sortie_reseau(DNN, input_data):
     layer_outputs.append(calcul_softmax(DNN.classification_layer, layer_outputs[-1] ))
     return layer_outputs
 
-def binary_cross_entropy(y_hat, y):
+def cross_entropy(y_hat, y):
     n = y.shape[-1]
     return -np.sum(y*np.log(y_hat), axis = -1)
 
@@ -71,12 +71,12 @@ def retropropagation(DNN, input_data, n_iterations, learning_rate, batch_size, d
 			labels_batch = shuffled_labels[iter_batch: min(data_size, iter_batch+batch_size), :]
 			network_output = entree_sortie_reseau(DNN, input_batch) 
 			classes_hat = network_output[-1] # softmaxed
-			cost = binary_cross_entropy(classes_hat, labels_batch) # loss/cost of the current state
+			cost = cross_entropy(classes_hat, labels_batch) # loss/cost of the current batch
 			
 			### let's compute the gradients on this batch
 			
 			## first we compute d loss / da * da/dz for the ultimate layer 
-			loss_grad = -labels_batch/classes_hat # gradient of Binary Cross Entropy
+			loss_grad = -labels_batch/classes_hat # gradient of Cross Entropy
 			classification_grad = np.zeros((labels_batch.shape[0], DNN.n_classes, DNN.n_classes))
 			for k in range(DNN.n_classes):
 				classification_grad[:,k,k] = classes_hat[:,k]*(1-classes_hat[:,k])
@@ -111,8 +111,12 @@ def retropropagation(DNN, input_data, n_iterations, learning_rate, batch_size, d
 			for layer in range(1,DNN.nb_couche+1) :
 				DNN.reseau[-layer].W -= learning_rate * np.mean(grad_W[layer], axis =0)
 				DNN.reseau[-layer].b -= learning_rate * np.mean(grad_b[layer], axis =0)
-	
-	return 0	
+		
+		# Compute Binary Cross Entropy on the whole set :
+		loss = np.mean(cross_entropy(entree_sortie_reseau(DNN, shuffled_input), shuffled_labels), axis = 0)
+		print("Epoch ", i, "/", n_iterations, " , loss : ", loss)
+
+	return DNN	
 
 
 

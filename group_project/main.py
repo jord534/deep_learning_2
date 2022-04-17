@@ -13,7 +13,7 @@ from sklearn.preprocessing import OneHotEncoder
 p, q = 320, 50
 nb_iter = 100
 alpha = 0.1
-batch_size = 10
+batch_size = 11
 n = 72
 nb_iter_gibbs = 1000
 nb_couche = 2
@@ -64,6 +64,7 @@ n_layers = 3
 input_dim = X.shape[-1]
 n_neurons = 20
 DNN = dbn.DNN(n_layers, input_dim, n_neurons)
+print(" Pre entrainement des ", n_layers, " couches du DNN")
 DNN = dbn.pretrain_DNN(DNN, X, nb_iter, batch_size, alpha)
 
 # n_classes needs to be Y.shape[-1]

@@ -106,15 +106,15 @@ def retropropagation(DNN, input_data, n_iterations, learning_rate, batch_size, d
 			## then we can iterate over the layers :
 			for layer in range(1,DNN.nb_couche+1) : # this includes the input layer
 				# to have the grad on W_(layer), we need a_(layer-1)
-				a = network_output[-layer-1]
+				a = network_output[-layer-2]
 				new_grad_W = np.einsum('ij,ik->ijk',backpass,a)
 				new_grad_b = np.einsum('ij,ki->kj', np.eye(DNN.q), backpass)
-				if layer == DNN.nb_couche :
-					new_grad_b = np.einsum('ij,ki->kj', np.eye(DNN.p), backpass)
+				#if layer == DNN.nb_couche : # input layer case
+				#	new_grad_b = np.einsum('ij,ki->kj', np.eye(DNN.p), backpass)
 				grad_W.append(new_grad_W)
 				grad_b.append(new_grad_b)
 				diag = a*(1-a)
-				if layer <3:
+				if layer <DNN.nb_couche:
 					sig_grad = np.zeros((labels_batch.shape[0],diag.shape[1],diag.shape[1]))
 					for k in range(labels_batch.shape[0]):
 						np.fill_diagonal(sig_grad[k], diag)
@@ -128,7 +128,7 @@ def retropropagation(DNN, input_data, n_iterations, learning_rate, batch_size, d
 				DNN.reseau[-layer].b -= learning_rate * np.expand_dims(np.mean(grad_b[layer], axis =0), axis = -1 )
 		
 		# Compute Binary Cross Entropy on the whole set :
-		loss = np.mean(cross_entropy(entree_sortie_reseau(DNN, shuffled_input), shuffled_labels), axis = 0)
+		loss = np.mean(cross_entropy(entree_sortie_reseau(DNN, shuffled_input)[-1], shuffled_labels.toarray()), axis = 0)
 		print("Epoch ", i, "/", n_iterations, " , loss : ", loss)
 
 	return DNN	

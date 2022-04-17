@@ -74,7 +74,7 @@ n_classes = Y.shape[-1]
 DNN.add_classification_layer(n_classes)
 
 import principal_DNN_MNIST as dnn
-learning_rate = 3e-4
+learning_rate = 3e-2
 DNN = dnn.retropropagation(DNN, X, nb_iter, learning_rate, batch_size, X.shape[0], Y )
 
 dnn.test_DNN(DNN, X, Y)

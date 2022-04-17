@@ -123,7 +123,7 @@ def retropropagation(DNN, input_data, n_iterations, learning_rate, batch_size, d
 			DNN.classification_layer.b -= learning_rate * np.expan_dims(np.mean(grad_b[0], axis = 0), axis =-1)
 			for layer in range(1,DNN.nb_couche+1) :
 				DNN.reseau[-layer].W -= learning_rate * np.mean(grad_W[layer], axis =0).T
-				DNN.reseau[-layer].b -= learning_rate * np.expand_dims(np.mean(grad_b[layer], axis =0)., axis = -1 )
+				DNN.reseau[-layer].b -= learning_rate * np.expand_dims(np.mean(grad_b[layer], axis =0), axis = -1 )
 		
 		# Compute Binary Cross Entropy on the whole set :
 		loss = np.mean(cross_entropy(entree_sortie_reseau(DNN, shuffled_input), shuffled_labels), axis = 0)

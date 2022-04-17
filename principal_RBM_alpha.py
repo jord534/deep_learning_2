@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.io as scio
 import numpy.random as rd
+import matplotlib.pyplot as plt
 
 data = scio.loadmat('binaryalphadigs.mat')
 
@@ -68,12 +69,18 @@ def train_RBM(rbm, epochs, learning_rate, batch_size, data_size):
             
     return rbm
 
-def generer_image_RBM(rbm, num_of_it, num_of_img):
-    n = data['numclass'] # n is the population per class in the dataset
-    k = n/num_of_img # we generate the same amount of images per class
-    # let's generate k images per class :
-    for _class in data['classlabels'] :
-        for i in range(k):
-            # gibbs sampling....
-            pass
-    return 0
+def generer_image_RBM(rbm, n_it, n_img):
+    images = []
+    input_size = rbm.a.shape
+    output_size = rbm.b.shape
+    for i in range(n_img):
+        v = (np.random.rand(input_size)<0.5).reshape(1,-1)
+        for k in range(n_it) : # Gibbs sampling
+            h = (np.random.rand(output_size)<entree_sortie_RBM(rbm, v*1.))*1.
+            v = (np.random.rand(input_size)<sortie_entree_RBM(rbm, h*1.))*1.
+        images.append(v)
+        plt.imshow(v.reshape(20,16), cmap = 'gray', vmin = 0, vmax = 1)
+        plt.show()
+    return images
+        
+

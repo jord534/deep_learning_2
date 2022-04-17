@@ -96,7 +96,7 @@ def retropropagation(DNN, input_data, n_iterations, learning_rate, batch_size, d
 			grad_b.append(new_grad_b)
 			backpass = backpass.dot(DNN.classification_layer.W).dot( a*(1-a) ) # a*(1-a) is the sig grad
 			## then we can iterate over the layers :
-			for layer in range(1,DNN.nb_couche+1) :
+			for layer in range(1,DNN.nb_couche+1) : # this includes the input layer
 				# to have the grad on W_(layer), we need a_(layer-1)
 				a = network_output[-layer-1]
 				new_grad_W = backpass.dot(a)
@@ -105,7 +105,12 @@ def retropropagation(DNN, input_data, n_iterations, learning_rate, batch_size, d
 				grad_b.append(new_grad_b)
 				backpass = backpass.dot(DNN.reseau[-layer].W).dot( a*(1-a) )
 
-			
+			### update the parameters
+			DNN.classification_layer.W -= learning_rate * np.mean(grad_W[0], axis = 0)
+			DNN.classification_layer.b -= learning_rate * np.mean(grad_b[0], axis = 0)
+			for layer in range(1,DNN.nb_couche+1) :
+				DNN.reseau[-layer].W -= learning_rate * np.mean(grad_W[layer], axis =0)
+				DNN.reseau[-layer].b -= learning_rate * np.mean(grad_b[layer], axis =0)
 	
 	return 0	
 

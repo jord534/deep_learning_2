@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.utils import shuffle
 
+
 def lire_alpha_digit(indice_carac):
 	mat = scipy.io.loadmat('binaryalphadigs.mat')
 	X = []
@@ -45,19 +46,12 @@ def train_RBM(RBM, X, nb_iter, batch_size, alpha):
 			x_batch = X[iter_batch: min(n, iter_batch+batch_size), :]
 			n_batch = x_batch.shape[0]
 			v0 = x_batch
-			"""
+
 			p_v0 = RBM.entre_sortie_RBM(v0)
 			h0 = (np.random.randn(n_batch, q) < p_v0)*1.
 			p_h0 = RBM.sortie_entre_RBM(h0)
 			v1 = (np.random.randn(n_batch, p) < p_h0)*1.
-			p_v1 = RBM.entre_sortie_RBM(v1)
-			"""
-			p_v0 = RBM.entre_sortie_RBM(v0)
-
-			p_h0 = RBM.sortie_entre_RBM(p_v0)
-
-			p_v1 = RBM.entre_sortie_RBM(p_h0)
-			
+			p_v1 = RBM.entre_sortie_RBM(v1)	
 
 			#Calcul des gradients
 			grad_a = np.mean(v0-v1, axis=0).reshape(-1, 1)
@@ -78,6 +72,7 @@ def train_RBM(RBM, X, nb_iter, batch_size, alpha):
 			X_reconstruit = RBM.sortie_entre_RBM(H) 
 			print( 'Iter : {}   Erreur : {}'.format(i, 
 				np.mean((X- X_reconstruit)**2)))
+	return RBM
 
 def generer_image_RBM(RBM, nb_iter_gibbs, nb_images):
 	p, q = RBM.p, RBM.q

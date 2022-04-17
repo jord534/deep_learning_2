@@ -1,3 +1,4 @@
+from sqlite3 import SQLITE_DROP_TRIGGER
 from ssl import SSL_ERROR_WANT_WRITE
 import scipy.io
 import matplotlib.pyplot as plt
@@ -29,11 +30,11 @@ def entree_sortie_reseau(DNN, X):
 
 def entree_sortie_reseau(DNN, input_data):
     layer_outputs=[np.array(input_data)] 
-    layer_outputs.append(rbm.entree_sortie_RBM(DNN.reseau[0], input_data)) # input layer
+    layer_outputs.append(DNN.reseau[0].entre_sortie_RBM(input_data)) # input layer
     n_hidden_layers = DNN.nb_couche
     for layer in range(1,n_hidden_layers):
-        layer_outputs.append(rbm.entree_sortie_RBM(   DNN.reseau[layer], 
-                                                            layer_outputs[-1]) )
+        layer_outputs.append(   DNN.reseau[layer].entre_sortie_RBM( 
+                                layer_outputs[-1]) )
     layer_outputs.append(calcul_softmax(DNN.classification_layer, layer_outputs[-1] ))
     return layer_outputs
 
@@ -76,34 +77,44 @@ def retropropagation(DNN, input_data, n_iterations, learning_rate, batch_size, d
 			### let's compute the gradients on this batch
 			
 			## first we compute d loss / da * da/dz for the ultimate layer 
-			loss_grad = -labels_batch/classes_hat # gradient of Cross Entropy
+			loss_grad = np.asarray(-labels_batch/classes_hat) # gradient of Cross Entropy
 			classification_grad = np.zeros((labels_batch.shape[0], DNN.n_classes, DNN.n_classes))
 			for k in range(DNN.n_classes):
 				classification_grad[:,k,k] = classes_hat[:,k]*(1-classes_hat[:,k])
 				for t in range(1, DNN.n_classes) :
-					classification_grad[:,k,k+t] = -classes_hat[:,k]*classes_hat[:,k+t]
-					classification_grad[:,k+t,k] = classification_grad[:,k,k+t]
+					classification_grad[:,k,t] = -classes_hat[:,k]*classes_hat[:,t]
+					classification_grad[:,t,k] = classification_grad[:,k,t]
 			## this gives use the object which we'll pass back
-			backpass = loss_grad.dot(classification_grad)
+			backpass = np.einsum('ij,ijk->ik', np.asarray(loss_grad), classification_grad )
 			## we'll start with the grads on class layer :
 			grad_W = []
-			grad_b = []
+			grad_b = [] 
 			a = network_output[-2]# a is the last sigmoid activated layer
 
-			new_grad_W = backpass.dot(a) 
+			new_grad_W = np.einsum('ij,ik->ijk',backpass,a)
 			new_grad_b = backpass.dot(np.ones(labels_batch.shape))
 			grad_W.append(new_grad_W)
 			grad_b.append(new_grad_b)
-			backpass = backpass.dot(DNN.classification_layer.W).dot( a*(1-a) ) # a*(1-a) is the sig grad
+
+			# sig grad:
+			diag = a*(1-a)
+			sig_grad = np.zeros((labels_batch.shape[0],diag.shape[0],diag.shape[1]))
+			for k in range(labels_batch.shape[0]):
+				np.fill_diagonal(sig_grad[k], diag)
+			backpass = backpass.dot(DNN.classification_layer.W).dot( sig_grad ) # np.diag(a*(1-a)) is the sig grad
 			## then we can iterate over the layers :
 			for layer in range(1,DNN.nb_couche+1) : # this includes the input layer
 				# to have the grad on W_(layer), we need a_(layer-1)
 				a = network_output[-layer-1]
-				new_grad_W = backpass.dot(a)
+				new_grad_W = np.einsum('ij,ik->ijk',backpass,a)
 				new_grad_b = backpass.dot( np.ones((labels_batch.shape[0],DNN.q)) )
 				grad_W.append(new_grad_W)
 				grad_b.append(new_grad_b)
-				backpass = backpass.dot(DNN.reseau[-layer].W).dot( a*(1-a) )
+				diag = a*(1-a)
+				sig_grad = np.zeros((labels_batch.shape[0],diag.shape[0],diag.shape[1]))
+				for k in range(labels_batch.shape[0]):
+					np.fill_diagonal(sig_grad[k], diag)
+				backpass = backpass.dot(DNN.reseau[-layer].W).dot( np.diag(a*(1-a)) )
 
 			### update the parameters
 			DNN.classification_layer.W -= learning_rate * np.mean(grad_W[0], axis = 0)

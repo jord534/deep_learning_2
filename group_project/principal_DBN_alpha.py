@@ -22,8 +22,9 @@ class DNN():
 def pretrain_DNN(DNN, X, nb_iter, batch_size, alpha):
 	data = X
 	for couche in range(DNN.nb_couche):
-		rbm.train_RBM(DNN.reseau[couche], data, nb_iter, batch_size, alpha)
+		DNN.reseau[couche] = rbm.train_RBM(DNN.reseau[couche], data, nb_iter, batch_size, alpha)
 		data = DNN.reseau[couche].entre_sortie_RBM(data)
+	return DNN
 
 def generer_image_DBN(DNN, nb_iter_gibbs, nb_images):
 	p, q = DNN.p, DNN.q

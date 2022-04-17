@@ -5,7 +5,7 @@ from sklearn.utils import shuffle
 import principal_RBM_alpha as rbm
 import principal_DBN_alpha as dbn
 import idx2numpy
-
+from sklearn.preprocessing import OneHotEncoder
 
 ##############################
 ######### AlphaDigit #########
@@ -34,9 +34,9 @@ rbm.generer_image_RBM(RBM, nb_iter_gibbs, 1)
 
 
 #DBM
-DBN = dbn.DNN(nb_couche, p, q)
-dbn.pretrain_DNN(DBN, X, nb_iter, batch_size, alpha)
-dbn.generer_image_DBN(DBN, nb_iter_gibbs, 1)
+#DBN = dbn.DNN(nb_couche, p, q)
+#dbn.pretrain_DNN(DBN, X, nb_iter, batch_size, alpha)
+#dbn.generer_image_DBN(DBN, nb_iter_gibbs, 1)
 
 
 
@@ -58,10 +58,18 @@ Y = OneHotEncoder().fit_transform(Y)
 image_size = 28
 num_images = 5
 
-#DNN is a DBN with a classification layer
-DNN = DBN
+
+# DNN pretraining unsupervised :
+n_layers = 3
+input_dim = X.shape[-1]
+n_neurons = 20
+DNN = dbn.DNN(n_layers, input_dim, n_neurons)
+DNN = dbn.pretrain_DNN(DNN, X, nb_iter, batch_size, alpha)
+
 # n_classes needs to be Y.shape[-1]
 n_classes = Y.shape[-1]
+
+#DNN is a DBN with a classification layer trained for such purpose :
 DNN.add_classification_layer(n_classes)
 
 import principal_DNN_MNIST as dnn

@@ -1,5 +1,6 @@
 import numpy as np
 import principal_RBM_alpha as bm
+import matplotlib.pyplot as plt
 
 class DNN:
     def __init__(self, input_rbm, n_neurons, n_hidden_layers, output_classification) :
@@ -38,5 +39,16 @@ def pretrain_DNN(dnn, n_iterations, learning_rate, batch_size, data_size):
     return dnn
 
 def generer_image_DBM(dnn, n_iterations, n_images):
-    # !!!! need to learn how to do that. (cf principal_RBM_alpha)
+    images = []
+    input_size = dnn.a.shape
+    output_size = dnn.b.shape
+    for i in range(n_img):
+        v = (np.random.rand(input_size)<0.5).reshape(1,-1)
+        for k in range(n_it) : # Gibbs sampling
+            h = (np.random.rand(output_size)<entree_sortie_(dnn, v*.))*1.
+            v = (np.random.rand(input_size)<sortie_entree_dnn(dnn, h*1.))*1.
+        images.append(v)
+        plt.imshow(v.reshape(20,16), cmap = 'gray', vmin = 0, vmax = 1)
+        plt.show()
+    return images
     return 0

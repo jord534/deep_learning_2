@@ -109,6 +109,8 @@ def retropropagation(DNN, input_data, n_iterations, learning_rate, batch_size, d
 				a = network_output[-layer-1]
 				new_grad_W = np.einsum('ij,ik->ijk',backpass,a)
 				new_grad_b = np.einsum('ij,ki->kj', np.eye(DNN.q), backpass)
+				if layer == DNN.nb_couche :
+					new_grad_b = np.einsum('ij,ki->kj', np.eye(DNN.p), backpass)
 				grad_W.append(new_grad_W)
 				grad_b.append(new_grad_b)
 				diag = a*(1-a)
@@ -120,7 +122,7 @@ def retropropagation(DNN, input_data, n_iterations, learning_rate, batch_size, d
 					backpass = np.einsum('ikj,ik->ik', sig_grad, temp)
 			### update the parameters
 			DNN.classification_layer.W -= learning_rate * np.mean(grad_W[0], axis = 0).T
-			DNN.classification_layer.b -= learning_rate * np.expan_dims(np.mean(grad_b[0], axis = 0), axis =-1)
+			DNN.classification_layer.b -= learning_rate * np.expand_dims(np.mean(grad_b[0], axis = 0), axis =-1)
 			for layer in range(1,DNN.nb_couche+1) :
 				DNN.reseau[-layer].W -= learning_rate * np.mean(grad_W[layer], axis =0).T
 				DNN.reseau[-layer].b -= learning_rate * np.expand_dims(np.mean(grad_b[layer], axis =0), axis = -1 )

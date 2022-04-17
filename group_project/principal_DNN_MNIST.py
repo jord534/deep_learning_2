@@ -1,5 +1,4 @@
-from sqlite3 import SQLITE_DROP_TRIGGER
-from ssl import SSL_ERROR_WANT_WRITE
+
 import scipy.io
 import matplotlib.pyplot as plt
 import numpy as np
@@ -38,9 +37,9 @@ def entree_sortie_reseau(DNN, input_data):
     layer_outputs.append(calcul_softmax(DNN.classification_layer, layer_outputs[-1] ))
     return layer_outputs
 
-def cross_entropy(y_hat, y):
+def cross_entropy(y_hat, y, eps=1e-8):
     n = y.shape[-1]
-    return -np.sum(np.multiply(y,np.log(y_hat)), axis = -1)
+    return -np.sum(np.multiply(y,np.log(y_hat+eps)), axis = -1)
 
 """"
 def retropropagation(DNN, X, Y, nb_iter, batch_size, alpha):
@@ -77,59 +76,54 @@ def retropropagation(DNN, input_data, n_iterations, learning_rate, batch_size, d
 			### let's compute the gradients on this batch
 			
 			## first we compute d loss / da * da/dz for the ultimate layer 
-			loss_grad = np.asarray(-labels_batch/classes_hat) # gradient of Cross Entropy
-			classification_grad = np.zeros((labels_batch.shape[0], DNN.n_classes, DNN.n_classes))
-			for k in range(DNN.n_classes):
-				classification_grad[:,k,k] = classes_hat[:,k]*(1-classes_hat[:,k])
-				for t in range(1, DNN.n_classes) :
-					classification_grad[:,k,t] = -classes_hat[:,k]*classes_hat[:,t]
-					classification_grad[:,t,k] = classification_grad[:,k,t]
-			## this gives use the object which we'll pass back
-			backpass = np.einsum('ij,ijk->ik', np.asarray(loss_grad), classification_grad )
+			#loss_grad = np.asarray(-labels_batch/classes_hat) # gradient of Cross Entropy
+			loss_grad = np.asarray(classes_hat-labels_batch)
+
+			backpass = loss_grad
 			## we'll start with the grads on class layer :
 			grad_W = []
 			grad_b = [] 
 			a = network_output[-2]# a is the last sigmoid activated layer
 
-			new_grad_W = np.einsum('ij,ik->ijk',backpass,a)
-			new_grad_b = np.einsum('ij,ki->kj', np.eye(DNN.n_classes), backpass)
-			grad_W.append(new_grad_W)
-			grad_b.append(new_grad_b)
+			new_grad_W = np.einsum('ij,ik->ikj', a, backpass)
+			new_grad_b = backpass
 
-			# sig grad:
-			diag = a*(1-a)
-			sig_grad = np.zeros((labels_batch.shape[0],diag.shape[1],diag.shape[1]))
-			for k in range(labels_batch.shape[0]):
-				np.fill_diagonal(sig_grad[k], diag)
-			temp = np.einsum('ij,kj->ki', DNN.classification_layer.W, backpass)
-			backpass = np.einsum('ikj,ik->ik', sig_grad, temp)
+			grad_W.append(new_grad_W) # shape is (50,20,10)
+			grad_b.append(new_grad_b) # shape is (50,10)
+
+			backpass = np.dot(backpass,DNN.classification_layer.W.T) # shape is (50,20)
 			## then we can iterate over the layers :
 			for layer in range(1,DNN.nb_couche+1) : # this includes the input layer
+				# sig grad:
+				grad_sig = a*(1-a) # shape is (50,20)
+				backpass = grad_sig*backpass # Hadamard product # shape is (50,20)
+
 				# to have the grad on W_(layer), we need a_(layer-1)
 				a = network_output[-layer-2]
-				new_grad_W = np.einsum('ij,ik->ijk',backpass,a)
-				new_grad_b = np.einsum('ij,ki->kj', np.eye(DNN.q), backpass)
-				#if layer == DNN.nb_couche : # input layer case
-				#	new_grad_b = np.einsum('ij,ki->kj', np.eye(DNN.p), backpass)
+				new_grad_W = np.einsum('ij,ik->ikj',a, backpass)
+				new_grad_b = backpass
+
 				grad_W.append(new_grad_W)
 				grad_b.append(new_grad_b)
-				diag = a*(1-a)
-				if layer <DNN.nb_couche:
-					sig_grad = np.zeros((labels_batch.shape[0],diag.shape[1],diag.shape[1]))
-					for k in range(labels_batch.shape[0]):
-						np.fill_diagonal(sig_grad[k], diag)
-					temp = np.einsum('ij,kj->ki', DNN.reseau[-layer].W, backpass)
-					backpass = np.einsum('ikj,ik->ik', sig_grad, temp)
+
+				backpass = np.dot(backpass, DNN.reseau[-layer].W.T) 
+
 			### update the parameters
-			DNN.classification_layer.W -= learning_rate * np.mean(grad_W[0], axis = 0).T
-			DNN.classification_layer.b -= learning_rate * np.expand_dims(np.mean(grad_b[0], axis = 0), axis =-1)
+			#l_r = learning_rate
+			#if i > 1 and abs(loss-loss_prev)<0.001 :
+			#	l_r = 10*l_r
+			#else :
+			#	l_r = learning_rate
+			DNN.classification_layer.W -= l_r * np.mean(grad_W[0], axis = 0).T
+			DNN.classification_layer.b -= l_r * np.expand_dims(np.mean(grad_b[0], axis = 0), axis =-1)
 			for layer in range(1,DNN.nb_couche+1) :
-				DNN.reseau[-layer].W -= learning_rate * np.mean(grad_W[layer], axis =0).T
-				DNN.reseau[-layer].b -= learning_rate * np.expand_dims(np.mean(grad_b[layer], axis =0), axis = -1 )
+				DNN.reseau[-layer].W -= l_r * np.mean(grad_W[layer], axis =0).T
+				DNN.reseau[-layer].b -= l_r * np.expand_dims(np.mean(grad_b[layer], axis =0), axis = -1 )
 		
 		# Compute Binary Cross Entropy on the whole set :
-		loss = np.mean(cross_entropy(entree_sortie_reseau(DNN, shuffled_input)[-1], shuffled_labels.toarray()), axis = 0)
-		print("Epoch ", i, "/", n_iterations, " , loss : ", loss)
+		loss = np.mean(cross_entropy(entree_sortie_reseau(DNN, shuffled_input)[-1], shuffled_labels), axis = 0)
+		loss_prev = loss
+		print("Epoch ", i+1, "/", n_iterations, " , loss : ", loss)
 
 	return DNN	
 

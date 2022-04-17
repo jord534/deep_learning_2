@@ -20,7 +20,7 @@ class RBM():
 	def __init__(self, p, q):
 		self.p = p
 		self.q = q
-		self.W = np.random.randn(p, q)*0.01
+		self.W = np.random.randn(p, q)*2
 		self.a = np.zeros((p, 1))
 		self.b = np.zeros((q, 1))
 
